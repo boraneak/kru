@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nova 🎓</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a14;
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #60d4f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #status {
+      font-size: 0.9rem;
+      color: #666;
+      min-height: 1.4em;
+    }
+    #status.connected { color: #6ee7b7; }
+    #status.error     { color: #f87171; }
+
+    #camera-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid #1e1e2e;
+      background: #111;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    /* Nova orb — pulses when she's speaking */
+    #orb {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #a78bfa, #6366f1);
+    }
+    #orb.speaking {
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(167,139,250,0.6); }
+      70%  { box-shadow: 0 0 0 16px rgba(167,139,250,0); }
+      100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+    }
+
+    #controls {
+      display: flex;
+      gap: 14px;
+    }
+
+    button {
+      padding: 12px 32px;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:active  { transform: scale(0.96); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    #btn-start {
+      background: linear-gradient(135deg, #a78bfa, #60d4f7);
+      color: #0a0a14;
+    }
+    #btn-stop {
+      background: #1e1e2e;
+      color: #f87171;
+      border: 1px solid #f8717133;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎓 Nova</h1>
+  <div id="status">Ready to study</div>
+
+  <div id="camera-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="orb"></div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-start">Start Session</button>
+    <button id="btn-stop" disabled>End Session</button>
+  </div>
+
+<script>
+// ─── Config ────────────────────────────────────────────────────────────────
+const WS_URL = `ws://${location.host}/ws`;
+const SEND_SAMPLE_RATE    = 16000;
+const RECEIVE_SAMPLE_RATE = 24000;
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let ws            = null;
+let mediaStream   = null;
+let audioCtx      = null;
+let micProcessor  = null;
+let cameraTimer   = null;
+let playbackCtx   = null;
+let nextPlayTime  = 0;
+let isRunning     = false;
+
+// ─── DOM ───────────────────────────────────────────────────────────────────
+const btnStart  = document.getElementById('btn-start');
+const btnStop   = document.getElementById('btn-stop');
+const statusEl  = document.getElementById('status');
+const videoEl   = document.getElementById('video');
+const orbEl     = document.getElementById('orb');
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function setStatus(msg, cls = '') {
+  statusEl.textContent = msg;
+  statusEl.className = cls;
+}
+
+// ─── Audio Playback: Gemini → Speaker ──────────────────────────────────────
+function ensurePlaybackCtx() {
+  if (!playbackCtx) {
+    playbackCtx  = new AudioContext({ sampleRate: RECEIVE_SAMPLE_RATE });
+    nextPlayTime = playbackCtx.currentTime;
+  }
+}
+
+function playPCM(base64data) {
+  ensurePlaybackCtx();
+
+  // base64 → Uint8Array
+  const raw   = atob(base64data);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+  // PCM16 little-endian → Float32
+  const samples = bytes.length / 2;
+  const buffer  = playbackCtx.createBuffer(1, samples, RECEIVE_SAMPLE_RATE);
+  const channel = buffer.getChannelData(0);
+  const view    = new DataView(bytes.buffer);
+  for (let i = 0; i < samples; i++) {
+    channel[i] = view.getInt16(i * 2, true) / 32768;
+  }
+
+  // Schedule playback seamlessly
+  const source  = playbackCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(playbackCtx.destination);
+
+  const startAt = Math.max(nextPlayTime, playbackCtx.currentTime);
+  source.start(startAt);
+  nextPlayTime = startAt + buffer.duration;
+
+  // Orb pulses while Nova speaks
+  orbEl.classList.add('speaking');
+  source.onended = () => {
+    if (nextPlayTime <= playbackCtx.currentTime + 0.05) {
+      orbEl.classList.remove('speaking');
+    }
+  };
+}
+
+// ─── Mic Capture: Browser → Backend ────────────────────────────────────────
+async function startMic(stream) {
+  audioCtx = new AudioContext({ sampleRate: SEND_SAMPLE_RATE });
+  const source = audioCtx.createMediaStreamSource(stream);
+
+  // AudioWorklet: capture raw Float32 from mic
+  const workletCode = `
+    class PCMProcessor extends AudioWorkletProcessor {
+      process(inputs) {
+        const input = inputs[0][0];
+        if (input) this.port.postMessage(input.slice());
+        return true;
+      }
+    }
+    registerProcessor('pcm-processor', PCMProcessor);
+  `;
+  const blob = new Blob([workletCode], { type: 'application/javascript' });
+  await audioCtx.audioWorklet.addModule(URL.createObjectURL(blob));
+
+  micProcessor = new AudioWorkletNode(audioCtx, 'pcm-processor');
+  source.connect(micProcessor);
+
+  micProcessor.port.onmessage = (e) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    // Float32 → PCM16
+    const float32 = e.data;
+    const pcm16   = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+      pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+    }
+
+    // PCM16 → base64 → JSON → WebSocket
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+    ws.send(JSON.stringify({ type: 'audio', data: b64 }));
+  };
+}
+
+// ─── Camera Capture: Browser → Backend ─────────────────────────────────────
+const canvas  = document.createElement('canvas');
+canvas.width  = 640;
+canvas.height = 480;
+const ctx2d   = canvas.getContext('2d');
+
+function startCamera(stream) {
+  videoEl.srcObject = stream;
+  cameraTimer = setInterval(() => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ctx2d.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+    ws.send(JSON.stringify({ type: 'video', data: b64 }));
+  }, 1000); // 1fps
+}
+
+// ─── WebSocket ──────────────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    setStatus('🟢 Nova is ready — show her your homework!', 'connected');
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'audio') playPCM(msg.data);
+  };
+
+  ws.onerror = () => setStatus('⚠️ Connection error', 'error');
+
+  ws.onclose = () => {
+    if (isRunning) setStatus('🔴 Disconnected', 'error');
+  };
+}
+
+// ─── Session Control ────────────────────────────────────────────────────────
+btnStart.addEventListener('click', async () => {
+  try {
+    setStatus('Requesting camera & mic...');
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+
+    isRunning = true;
+    btnStart.disabled = true;
+    btnStop.disabled  = false;
+
+    connectWS();
+    await startMic(mediaStream);
+    startCamera(mediaStream);
+
+  } catch (err) {
+    setStatus(`❌ ${err.message}`, 'error');
+  }
+});
+
+btnStop.addEventListener('click', () => {
+  isRunning = false;    
+
+  if (ws)           { ws.close(); ws = null; }
+  if (cameraTimer)  { clearInterval(cameraTimer); cameraTimer = null; }
+  if (micProcessor) { micProcessor.disconnect(); micProcessor = null; }
+  if (audioCtx)     { audioCtx.close(); audioCtx = null; }
+  if (playbackCtx)  { playbackCtx.close(); playbackCtx = null; nextPlayTime = 0; }
+  if (mediaStream)  { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+
+  videoEl.srcObject = null;
+  btnStart.disabled = false;
+  btnStop.disabled  = true;
+  setStatus('Session ended');
+});
+</script>
+</body>
+</html>
