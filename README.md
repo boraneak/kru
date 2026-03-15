@@ -14,11 +14,22 @@ Nova is a real-time AI tutor that watches your homework through your camera, lis
 
 ## Architecture
 ```
-Browser (mic + camera)
-    ↕ WebSocket (JSON + base64)
-FastAPI Backend (Google Cloud Run)
-    ↕ Gemini Live API
-gemini-2.5-flash-native-audio-preview
+Student Browser
+├── 🎤 Mic (PCM 16kHz) ──────────────┐
+└── 📷 Camera (JPEG 1fps) ───────────┤
+                                      ↕ WebSocket (WSS)
+                                      ↕ JSON + base64
+                          Google Cloud
+                          └── Cloud Run (backend)
+                              ├── FastAPI WebSocket /ws
+                              ├── asyncio queues
+                              ├── Session manager (auto-reconnect)
+                              └── Nova system prompt (Socratic · proactive)
+                                      ↕ Gemini Live API
+                              └── gemini-2.5-flash-native-audio-preview
+                                      ↕
+                          ┌── Audio response (PCM 24kHz)
+                          └── 🔊 Browser speaker
 ```
 
 ## Tech Stack
