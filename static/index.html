@@ -116,7 +116,7 @@
 
 <script>
 // ─── Config ────────────────────────────────────────────────────────────────
-const WS_URL = `ws://${location.host}/ws`;
+const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
 const SEND_SAMPLE_RATE    = 16000;
 const RECEIVE_SAMPLE_RATE = 24000;
 
