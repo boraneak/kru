@@ -13,32 +13,14 @@ Nova is a real-time AI tutor that watches your homework through your camera, lis
 [Demo Video Link]
 
 ## Architecture
-```
-Student Browser
-├── 🎤 Mic (PCM 16kHz) ──────────────┐
-└── 📷 Camera (JPEG 1fps) ───────────┤
-                                      ↕ WebSocket (WSS)
-                                      ↕ JSON + base64
-                          Google Cloud
-                          └── Cloud Run (backend)
-                              ├── FastAPI WebSocket /ws
-                              ├── asyncio queues
-                              ├── Session manager (auto-reconnect)
-                              └── Nova system prompt (Socratic · proactive)
-                                      ↕ Gemini Live API
-                              └── gemini-2.5-flash-native-audio-preview
-                                      ↕
-                          ┌── Audio response (PCM 24kHz)
-                          └── 🔊 Browser speaker
-```
+
+![Nova Architecture](architecture.svg)
 
 ## Tech Stack
-
 - **Frontend**: Vanilla HTML/JS, Web Audio API, WebSocket
 - **Backend**: Python, FastAPI, asyncio
-- **AI**: Google Gemini Live API (gemini-2.5-flash-native-audio-preview)
-- **Cloud**: Google Cloud Run
-- **Deployment**: Docker
+- **AI**: Google Gemini Live API (gemini-2.5-flash-native-audio-preview-12-2025)
+- **Deployment**: Railway (Docker)
 
 ## Quick Start
 ```bash
@@ -64,7 +46,11 @@ python3 main.py
 open http://localhost:8000
 ```
 
-## Cloud Deployment
+## Live Deployment
+Nova is deployed on Railway:
+🌐 https://nova-live-tutor-production.up.railway.app
+
+## Cloud Run Deployment (GCP)
 ```bash
 # Deploy to Google Cloud Run
 chmod +x clouddeploy.sh
