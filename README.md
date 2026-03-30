@@ -14,7 +14,7 @@ Nova is a real-time AI tutor that watches your homework through your camera, lis
 
 ## Architecture
 
-![Nova Architecture](architecture.svg)
+![Nova Architecture]()
 
 ## Tech Stack
 - **Frontend**: Vanilla HTML/JS, Web Audio API, WebSocket
