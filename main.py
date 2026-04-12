@@ -2,18 +2,18 @@ import asyncio
 import json
 import base64
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from agent.session import gemini_session
 
 app = FastAPI(title="Nova - Live Tutor")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 @app.get("/")
 async def root():
-    return FileResponse("static/index.html")
+    return {
+        "message": "Nova API is running 🎓",
+        "status": "healthy",
+        "websocket": "ws://localhost:8000/ws",
+    }
 
 
 @app.websocket("/ws")
