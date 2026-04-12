@@ -1,18 +1,21 @@
 import asyncio
 import json
 import base64
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from agent.session import gemini_session
 
 app = FastAPI(title="Nova - Live Tutor")
 
 
 @app.get("/")
-async def root():
+async def root(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    ws_url = base_url.replace("http://", "ws://").replace("https://", "wss://") + "/ws"
+
     return {
         "message": "Nova API is running 🎓",
         "status": "healthy",
-        "websocket": "ws://localhost:8000/ws",
+        "websocket": ws_url,
     }
 
 
