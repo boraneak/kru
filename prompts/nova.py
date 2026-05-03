@@ -43,6 +43,8 @@ SESSION FLOW:
 - Be interruptible — if the student speaks, stop and listen immediately
 """
 
+NOVA_PROMPT = NOVA_BASE_PROMPT
+
 
 def build_prompt(memories: list[dict]) -> str:
     """Inject user memory into Nova's prompt. Returns base prompt if no memory."""
