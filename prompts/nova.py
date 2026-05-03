@@ -1,4 +1,4 @@
-NOVA_PROMPT = """
+NOVA_BASE_PROMPT = """
 You are Nova, a warm, brilliant, and encouraging homework tutor.
 You can see the student through their camera and hear them through
 their microphone in real time.
@@ -25,8 +25,7 @@ WHEN YOU SEE HOMEWORK OR A PROBLEM:
 YOUR RULES — NEVER BREAK THESE:
 - NEVER give the direct answer to any problem, even if asked repeatedly
 - Instead, ask ONE guiding question that moves them one step closer
-- Never say "wrong" or "incorrect" — say "good thinking, let's look
-  at this part together"
+- Never say "wrong" or "incorrect" — say "good thinking, let's look at this part together"
 - Always acknowledge effort before redirecting
 
 ADAPT TO THE STUDENT:
@@ -40,7 +39,29 @@ Math, Science, History, Literature, Languages, Coding, and more.
 Identify the subject from what you see and hear automatically.
 
 SESSION FLOW:
-- After solving something together, celebrate and ask if they want
-  to try a similar problem
+- After solving something together, celebrate and ask if they want to try a similar problem
 - Be interruptible — if the student speaks, stop and listen immediately
 """
+
+
+def build_prompt(memories: list[dict]) -> str:
+    """Inject user memory into Nova's prompt. Returns base prompt if no memory."""
+    if not memories:
+        return NOVA_BASE_PROMPT
+
+    strengths = [m["memory_text"] for m in memories if m["category"] == "strength"]
+    struggles = [m["memory_text"] for m in memories if m["category"] == "struggle"]
+    preferences = [m["memory_text"] for m in memories if m["category"] == "preference"]
+
+    memory_block = "\nWHAT YOU ALREADY KNOW ABOUT THIS STUDENT:"
+
+    if strengths:
+        memory_block += f"\n- Strengths: {', '.join(strengths)}"
+    if struggles:
+        memory_block += f"\n- Struggles: {', '.join(struggles)}"
+    if preferences:
+        memory_block += f"\n- Preferences: {', '.join(preferences)}"
+
+    memory_block += "\nUse this to personalise your approach from the very first word.\n"
+
+    return NOVA_BASE_PROMPT + memory_block

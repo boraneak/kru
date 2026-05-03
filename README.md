@@ -1,4 +1,4 @@
-# 🎓 Kru - AI Live Tutor (Backend)
+# 🎓 Nova - AI Live Tutor (Backend)
 
 > Real-time AI tutor backend powered by Gemini Live API
 
