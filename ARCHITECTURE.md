@@ -1,7 +1,7 @@
-# Nova Realtime Contract (v1)
+# Korkhor Realtime Contract (v1)
 
-This document defines the websocket protocol shared by `nova-frontend` and
-`nova-live-tutor`.
+This document defines the websocket protocol shared by `korkhor-frontend` and
+`korkhor-ai`.
 
 ## Endpoint
 

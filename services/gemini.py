@@ -65,7 +65,7 @@ async def run_gemini_session(
                 model=MODEL_NAME,
                 config=build_config(system_prompt),
             ) as session:
-                print("✅ Nova is ready!")
+                print("✅ Korkhor is ready!")
 
                 await session.send_client_content(
                     turns=types.Content(

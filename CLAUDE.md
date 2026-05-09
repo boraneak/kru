@@ -1,13 +1,13 @@
 ---
-name: Nova AI Live Tutor
+name: Korkhor AI
 description: Project documentation for Claude Code
 type: reference
 ---
 
-# Nova AI Live Tutor
+# Korkhor AI
 
 ## Overview
-Nova is a real‑time AI tutoring backend built with **FastAPI**, **WebSockets**, and the **Google Gemini Live** API.  It authenticates users via **Supabase** and streams audio/video between the client and Gemini.
+Korkhor is a real‑time AI tutoring backend built with **FastAPI**, **WebSockets**, and the **Google Gemini Live** API.  It authenticates users via **Supabase** and streams audio/video between the client and Gemini.
 
 ## Tech Stack
 - **Python 3.13**
@@ -40,8 +40,8 @@ Nova is a real‑time AI tutoring backend built with **FastAPI**, **WebSockets**
 ## Development Workflow
 ```bash
 # Clone & set up virtualenv
-git clone https://github.com/boraneak/nova-live-tutor.git
-cd nova-live-tutor
+git clone https://github.com/boraneak/korkhor-ai.git
+cd korkhor-ai
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -55,7 +55,7 @@ uvicorn main:app --reload
 ```
 
 ## Deployment
-- Docker image can be built with `docker build -t nova-live-tutor .`
+- Docker image can be built with `docker build -t korkhor-ai .`
 - Deploy to Railway, Fly.io, or any container‑orchestrated platform.
 
 ---

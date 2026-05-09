@@ -6,7 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from agent.session import gemini_session
 from config import SUPABASE_URL, SUPABASE_ANON_KEY
 
-app = FastAPI(title="Nova - Live Tutor")
+app = FastAPI(title="Korkhor AI - Tutoring API", version="1.0")
 
 INBOUND_EVENT_TYPES = {"audio", "video", "ping"}
 
@@ -62,7 +62,7 @@ async def root(request: Request):
     ws_url = base_url.replace("http://", "ws://").replace("https://", "wss://") + "/ws"
 
     return {
-        "message": "Nova API is running 🎓",
+        "message": "Korkhor API is running 🎓",
         "status": "healthy",
         "websocket": ws_url,
     }

@@ -1,4 +1,4 @@
-# 🎓 Nova - AI Live Tutor (Backend)
+# 🎓 Korkhor AI (Backend)
 
 > Real-time AI tutor backend powered by Gemini Live API
 
@@ -13,8 +13,8 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/boraneak/nova-live-tutor.git
-cd nova-live-tutor
+git clone https://github.com/korkhor-ai/korkhor-ai
+cd korkhor-ai
 
 # 2. Create virtual environment
 python3 -m venv venv

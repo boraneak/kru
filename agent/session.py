@@ -3,13 +3,13 @@ import base64
 from google import genai
 from google.genai import types
 from config import GEMINI_API_KEY, MODEL_NAME
-from prompts.nova import NOVA_PROMPT
+from prompts.korkhor import KOR_PROMPT
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 CONFIG = {
     "response_modalities": ["AUDIO"],
-    "system_instruction": NOVA_PROMPT,
+    "system_instruction": KORKHOR_PROMPT,
 }
 
 
@@ -24,7 +24,7 @@ async def gemini_session(
             async with client.aio.live.connect(
                 model=MODEL_NAME, config=CONFIG
             ) as session:
-                print("✅ Nova is ready!")
+                print("✅ Korkhor is ready!")
 
                 await session.send_client_content(
                     turns=types.Content(

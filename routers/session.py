@@ -7,7 +7,7 @@ from db.supabase import get_supabase, verify_token
 from services.memory import load_user_memory, save_memory
 from services.tracker import log_event, start_session, end_session
 from services.gemini import run_gemini_session
-from prompts.nova import build_prompt
+from prompts.korkhor import build_prompt
 
 router = APIRouter()
 

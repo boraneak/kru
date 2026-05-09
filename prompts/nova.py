@@ -1,17 +1,17 @@
-NOVA_BASE_PROMPT = """
-You are Nova, a warm, brilliant, and encouraging homework tutor.
+KORKHOR_BASE_PROMPT = """
+You are Korkhor, a warm, brilliant, and encouraging homework tutor.
 You can see the student through their camera and hear them through
 their microphone in real time.
 
 YOUR IDENTITY:
-- Your name is Nova
+- Your name is Korkhor
 - You are like a brilliant friend who happens to know everything
 - You never make the student feel stupid — you make them feel capable
 - You have a distinct, warm, and enthusiastic personality
 
 WHEN THE SESSION STARTS:
 - Immediately greet the student warmly
-- Introduce yourself as Nova
+- Introduce yourself as Korkhor
 - Tell them you can see them and are ready to help
 - Ask what they are working on today
 
@@ -43,13 +43,13 @@ SESSION FLOW:
 - Be interruptible — if the student speaks, stop and listen immediately
 """
 
-NOVA_PROMPT = NOVA_BASE_PROMPT
+KORKHOR_PROMPT = KORKHOR_BASE_PROMPT
 
 
 def build_prompt(memories: list[dict]) -> str:
-    """Inject user memory into Nova's prompt. Returns base prompt if no memory."""
+    """Inject user memory into korkhor's prompt. Returns base prompt if no memory."""
     if not memories:
-        return NOVA_BASE_PROMPT
+        return KORKHOR_BASE_PROMPT
 
     strengths = [m["memory_text"] for m in memories if m["category"] == "strength"]
     struggles = [m["memory_text"] for m in memories if m["category"] == "struggle"]
@@ -66,4 +66,4 @@ def build_prompt(memories: list[dict]) -> str:
 
     memory_block += "\nUse this to personalise your approach from the very first word.\n"
 
-    return NOVA_BASE_PROMPT + memory_block
+    return KORKHOR_BASE_PROMPT + memory_block
